@@ -286,3 +286,6 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+
+# Don't ignore the bin folder in the root
+!/[Bb]in/
