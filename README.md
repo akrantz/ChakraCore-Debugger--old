@@ -4,7 +4,7 @@ Debugging companion for the ChakraCore JavaScript engine
 ## Prerequisites
 
 * Visual Studio 2017
-* Python 2.7
+* Python 2.7 (must be in the PATH)
 
 ## Building
 
@@ -20,4 +20,6 @@ ChakraCore-Debugger depends on ChakraCore from [NuGet](https://www.nuget.org/pac
 > .\ChakraCoreDebugger.sln
 ```
 3. Right-click the "Debug.Sample" project and click "Set as StartUp Project"
-4. Choose the desired build configuration and platform, then hit `F5` to start debugging
+4. Choose the desired build configuration and platform (e.g. Debug - x64)
+5. Right-click on the Solution in "Solution Explorer" and click "Restore NuGet Packages"
+6. Hit `F5` to start debugging
