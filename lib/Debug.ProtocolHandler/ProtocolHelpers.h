@@ -5,13 +5,16 @@
 
 #pragma once
 
-#include "targetver.h"
-
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-
-#include <cstdint>
-#include <exception>
-#include <iostream>
+#include <ChakraCore.h>
+#include <protocol/Runtime.h>
 #include <memory>
 
-#include <ChakraCore.h>
+namespace JsDebug
+{
+    namespace ProtocolHelpers
+    {
+        std::unique_ptr<protocol::Runtime::RemoteObject> WrapObject(JsValueRef object);
+        std::unique_ptr<protocol::Runtime::RemoteObject> WrapException(JsValueRef exception);
+        std::unique_ptr<protocol::Runtime::RemoteObject> GetUndefinedObject();
+    }
+}
