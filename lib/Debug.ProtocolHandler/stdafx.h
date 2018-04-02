@@ -18,5 +18,8 @@
 
 inline void IfJsErrorThrow(JsErrorCode error, const char* message)
 {
-    throw std::runtime_error(message);
+    if (error != JsNoError)
+    {
+        throw std::runtime_error(message);
+    }
 }
