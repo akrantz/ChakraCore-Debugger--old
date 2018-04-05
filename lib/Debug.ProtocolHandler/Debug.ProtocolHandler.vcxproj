@@ -176,6 +176,7 @@
     <ClCompile Include="DebuggerImpl.cpp" />
     <ClCompile Include="ChakraDebugProtocolHandler.cpp" />
     <ClCompile Include="DebuggerScript.cpp" />
+    <ClCompile Include="ErrorHelpers.cpp" />
     <ClCompile Include="PropertyHelpers.cpp" />
     <ClCompile Include="ProtocolHandler.cpp" />
     <ClCompile Include="ProtocolHelpers.cpp" />

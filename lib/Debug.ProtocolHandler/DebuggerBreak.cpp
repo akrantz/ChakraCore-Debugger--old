@@ -74,15 +74,11 @@ namespace JsDebug
     std::unique_ptr<RemoteObject> DebuggerBreak::GetException() const
     {
         bool hasProperty = false;
-        IfJsErrorThrow(
-            PropertyHelpers::HasProperty(m_breakInfo.Get(), "exception", &hasProperty),
-            "failed to check exception property");
+        IfJsErrorThrow(PropertyHelpers::HasProperty(m_breakInfo.Get(), "exception", &hasProperty));
 
         if (hasProperty) {
             JsValueRef exceptionProperty = JS_INVALID_REFERENCE;
-            IfJsErrorThrow(
-                PropertyHelpers::GetProperty(m_breakInfo.Get(), "exception", &exceptionProperty),
-                "failed to get exception property");
+            IfJsErrorThrow(PropertyHelpers::GetProperty(m_breakInfo.Get(), "exception", &exceptionProperty));
 
             return ProtocolHelpers::WrapException(exceptionProperty);
         }

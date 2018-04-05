@@ -17,7 +17,7 @@ namespace JsDebug
 
             if (doConversion)
             {
-                IfJsErrorThrow(JsConvertValueToString(object, &stringValue), "failed to convert to string");
+                IfJsErrorThrow(JsConvertValueToString(object, &stringValue));
             }
             else
             {
@@ -25,15 +25,16 @@ namespace JsDebug
             }
 
             int stringLength = 0;
-            IfJsErrorThrow(JsGetStringLength(stringValue, &stringLength), "failed to get string length");
+            IfJsErrorThrow(JsGetStringLength(stringValue, &stringLength));
 
             std::vector<uint16_t> buffer;
-            buffer.reserve(stringLength);
-            IfJsErrorThrow(
-                JsCopyStringUtf16(stringValue, 0, stringLength, buffer.data(), nullptr),
-                "failed to copy string");
 
-            return String16(buffer.data(), stringLength);
+            // Resize the vector an initialize the elements to zero.
+            buffer.resize(stringLength, 0);
+
+            IfJsErrorThrow(JsCopyStringUtf16(stringValue, 0, buffer.size(), buffer.data(), nullptr));
+
+            return String16(buffer.data(), buffer.size());
         }
 
         JsErrorCode GetPropertyAsStringInternal(
@@ -130,14 +131,14 @@ namespace JsDebug
     bool PropertyHelpers::TryGetProperty(JsValueRef object, const char* name, JsValueRef* value)
     {
         JsPropertyIdRef propertyId = JS_INVALID_REFERENCE;
-        IfJsErrorThrow(JsCreatePropertyId(name, std::strlen(name), &propertyId), "failed to create property ID");
+        IfJsErrorThrow(JsCreatePropertyId(name, std::strlen(name), &propertyId));
 
         bool hasProperty = false;
-        IfJsErrorThrow(JsHasProperty(object, propertyId, &hasProperty), "failed to check property");
+        IfJsErrorThrow(JsHasProperty(object, propertyId, &hasProperty));
 
         if (hasProperty)
         {
-            IfJsErrorThrow(JsGetProperty(object, propertyId, value), "failed to get property");
+            IfJsErrorThrow(JsGetProperty(object, propertyId, value));
             return true;
         }
 
@@ -149,7 +150,7 @@ namespace JsDebug
         JsValueRef propertyValue = JS_INVALID_REFERENCE;
         if (TryGetProperty(object, name, &propertyValue))
         {
-            IfJsErrorThrow(JsBooleanToBool(propertyValue, value), "failed to get bool from boolean");
+            IfJsErrorThrow(JsBooleanToBool(propertyValue, value));
             return true;
         }
 
@@ -161,7 +162,7 @@ namespace JsDebug
         JsValueRef propertyValue = JS_INVALID_REFERENCE;
         if (TryGetProperty(object, name, &propertyValue))
         {
-            IfJsErrorThrow(JsNumberToInt(propertyValue, value), "failed to get integer from number");
+            IfJsErrorThrow(JsNumberToInt(propertyValue, value));
             return true;
         }
 

@@ -24,14 +24,14 @@ namespace JsDebug
         , m_breakEventCallback(nullptr)
         , m_breakEventCallbackState(nullptr)
     {
-        IfJsErrorThrow(JsDiagStartDebugging(m_runtime, &Debugger::DebugEventCallback, this), "failed to start debugging");
+        IfJsErrorThrow(JsDiagStartDebugging(m_runtime, &Debugger::DebugEventCallback, this));
     }
 
     Debugger::~Debugger()
     {
         try
         {
-            IfJsErrorThrow(JsDiagStopDebugging(m_runtime, nullptr), "failed to stop debugging");
+            IfJsErrorThrow(JsDiagStopDebugging(m_runtime, nullptr));
         }
         catch (const std::exception& e)
         {
@@ -86,7 +86,7 @@ namespace JsDebug
 
     void Debugger::RequestAsyncBreak()
     {
-        IfJsErrorThrow(JsDiagRequestAsyncBreak(m_runtime), "failed to request async break");
+        IfJsErrorThrow(JsDiagRequestAsyncBreak(m_runtime));
     }
 
     std::vector<DebuggerScript> Debugger::GetScripts()
@@ -94,15 +94,15 @@ namespace JsDebug
         std::vector<DebuggerScript> scripts;
 
         JsValueRef scriptsArray = JS_INVALID_REFERENCE;
-        IfJsErrorThrow(JsDiagGetScripts(&scriptsArray), "failed to get scripts");
+        IfJsErrorThrow(JsDiagGetScripts(&scriptsArray));
 
         int length = 0;
-        IfJsErrorThrow(PropertyHelpers::GetProperty(scriptsArray, "length", &length), "failed to get length");
+        IfJsErrorThrow(PropertyHelpers::GetProperty(scriptsArray, "length", &length));
 
         for (int i = 0; i < length; i++)
         {
             JsValueRef scriptValue = JS_INVALID_REFERENCE;
-            IfJsErrorThrow(PropertyHelpers::GetIndexedProperty(scriptsArray, i, &scriptValue), "failed to get indexed property");
+            IfJsErrorThrow(PropertyHelpers::GetIndexedProperty(scriptsArray, i, &scriptValue));
 
             scripts.emplace_back(scriptValue);
         }
@@ -113,12 +113,10 @@ namespace JsDebug
     std::vector<DebuggerCallFrame> Debugger::GetCallFrames(int limit)
     {
         JsValueRef stackTrace = JS_INVALID_REFERENCE;
-        IfJsErrorThrow(JsDiagGetStackTrace(&stackTrace), "failed to get stack trace");
+        IfJsErrorThrow(JsDiagGetStackTrace(&stackTrace));
 
         int length = 0;
-        IfJsErrorThrow(
-            PropertyHelpers::GetProperty(stackTrace, "length", &length),
-            "failed to get length property");
+        IfJsErrorThrow(PropertyHelpers::GetProperty(stackTrace, "length", &length));
 
         if (limit > 0 && limit < length) {
             length = limit;
@@ -128,9 +126,7 @@ namespace JsDebug
 
         for (int i = 0; i < length; ++i) {
             JsValueRef callFrameValue = JS_INVALID_REFERENCE;
-            IfJsErrorThrow(
-                PropertyHelpers::GetIndexedProperty(stackTrace, i, &callFrameValue),
-                "failed to get indexed property");
+            IfJsErrorThrow(PropertyHelpers::GetIndexedProperty(stackTrace, i, &callFrameValue));
 
             callFrames.emplace_back(callFrameValue);
         }

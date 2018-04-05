@@ -16,10 +16,10 @@ namespace JsDebug
     {
         if (!m_scriptInfo.IsEmpty())
         {
-            IfJsErrorThrow(PropertyHelpers::GetProperty(m_scriptInfo.Get(), "scriptId", &m_scriptId), "failed to get scriptId");
+            IfJsErrorThrow(PropertyHelpers::GetProperty(m_scriptInfo.Get(), "scriptId", &m_scriptId));
 
             JsValueRef scriptSource = JS_INVALID_REFERENCE;
-            IfJsErrorThrow(JsDiagGetSource(m_scriptId, &scriptSource), "failed to get script source");
+            IfJsErrorThrow(JsDiagGetSource(m_scriptId, &scriptSource));
             m_scriptSource = scriptSource;
 
             // TODO: calculate hash
@@ -47,7 +47,7 @@ namespace JsDebug
 
             if (err != JsErrorInvalidArgument)
             {
-                IfJsErrorThrow(err, "failed to get url");
+                IfJsErrorThrow(err);
             }
         }
 
@@ -75,7 +75,7 @@ namespace JsDebug
 
         if (!m_scriptSource.IsEmpty())
         {
-            IfJsErrorThrow(PropertyHelpers::GetProperty(m_scriptSource.Get(), "source", &source), "failed to get source string");
+            IfJsErrorThrow(PropertyHelpers::GetProperty(m_scriptSource.Get(), "source", &source));
         }
 
         return source;
@@ -102,7 +102,7 @@ namespace JsDebug
 
         if (!m_scriptInfo.IsEmpty())
         {
-            IfJsErrorThrow(PropertyHelpers::GetProperty(m_scriptInfo.Get(), "lineCount", &lineCount), "failed to get lineCount");
+            IfJsErrorThrow(PropertyHelpers::GetProperty(m_scriptInfo.Get(), "lineCount", &lineCount));
         }
 
         return lineCount;

@@ -23,7 +23,7 @@ namespace JsDebug
         {
             if (m_value != JS_INVALID_REFERENCE)
             {
-                IfJsErrorThrow(JsAddRef(m_value, nullptr), "failed to add reference");
+                IfJsErrorThrow(JsAddRef(m_value, nullptr));
             }
         }
 
@@ -33,7 +33,7 @@ namespace JsDebug
             {
                 if (m_value != JS_INVALID_REFERENCE)
                 {
-                    IfJsErrorThrow(JsRelease(m_value, nullptr), "failed to release reference");
+                    IfJsErrorThrow(JsRelease(m_value, nullptr));
                 }
             }
             catch (const std::exception& e)
@@ -62,7 +62,13 @@ namespace JsDebug
             return *this;
         }
 
-        JsPersistent& operator=(const JsPersistent& other) = delete;
+        JsPersistent& operator=(const JsPersistent& other)
+        {
+            JsPersistent temp(other);
+            std::swap(*this, temp);
+
+            return *this;
+        }
         
         JsPersistent& operator=(const JsValueRef& other)
         {

@@ -30,9 +30,7 @@ namespace JsDebug
         std::unique_ptr<RemoteObject> CreateObject(JsValueRef object)
         {
             protocol::String type;
-            IfJsErrorThrow(
-                PropertyHelpers::GetProperty(object, "type", &type),
-                "failed to get type property");
+            IfJsErrorThrow(PropertyHelpers::GetProperty(object, "type", &type));
 
             return RemoteObject::create()
                 .setType(type)
@@ -63,9 +61,7 @@ namespace JsDebug
         // A description is required for values to be shown in the debugger.
         if (hasValue && !hasDisplay)
         {
-            IfJsErrorThrow(
-                PropertyHelpers::GetPropertyAsString(object, "value", &display),
-                "failed to get value as string");
+            IfJsErrorThrow(PropertyHelpers::GetPropertyAsString(object, "value", &display));
         }
 
         if (display.empty())
