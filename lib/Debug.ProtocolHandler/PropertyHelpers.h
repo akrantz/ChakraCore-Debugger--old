@@ -12,15 +12,15 @@ namespace JsDebug
 {
     namespace PropertyHelpers
     {
-        JsErrorCode GetProperty(JsValueRef object, const char* name, JsValueRef* value);
-        JsErrorCode GetProperty(JsValueRef object, const char* name, bool* value);
-        JsErrorCode GetProperty(JsValueRef object, const char* name, int* value);
-        JsErrorCode GetProperty(JsValueRef object, const char* name, String16* value);
-        JsErrorCode GetPropertyAsString(JsValueRef object, const char* name, String16* value);
+        void GetProperty(JsValueRef object, const char* name, JsValueRef* value);
+        void GetProperty(JsValueRef object, const char* name, bool* value);
+        void GetProperty(JsValueRef object, const char* name, int* value);
+        void GetProperty(JsValueRef object, const char* name, String16* value);
+        void GetPropertyAsString(JsValueRef object, const char* name, String16* value);
 
-        JsErrorCode GetIndexedProperty(JsValueRef object, int index, JsValueRef* value);
+        void GetIndexedProperty(JsValueRef object, int index, JsValueRef* value);
 
-        JsErrorCode HasProperty(JsValueRef object, const char* name, bool* hasProperty);
+        bool HasProperty(JsValueRef object, const char* name);
 
         bool TryGetProperty(JsValueRef object, const char* name, JsValueRef* value);
         bool TryGetProperty(JsValueRef object, const char* name, bool* value);

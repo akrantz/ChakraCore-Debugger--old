@@ -8,15 +8,6 @@
 #include <ChakraCore.h>
 #include <string>
 
-#define IfFailRet(v) \
-    { \
-        JsErrorCode error = (v); \
-        if (error != JsNoError) \
-        { \
-            return error; \
-        } \
-    }
-
 namespace JsDebug
 {
     class JsErrorException

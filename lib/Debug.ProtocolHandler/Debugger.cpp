@@ -97,12 +97,12 @@ namespace JsDebug
         IfJsErrorThrow(JsDiagGetScripts(&scriptsArray));
 
         int length = 0;
-        IfJsErrorThrow(PropertyHelpers::GetProperty(scriptsArray, "length", &length));
+        PropertyHelpers::GetProperty(scriptsArray, "length", &length);
 
         for (int i = 0; i < length; i++)
         {
             JsValueRef scriptValue = JS_INVALID_REFERENCE;
-            IfJsErrorThrow(PropertyHelpers::GetIndexedProperty(scriptsArray, i, &scriptValue));
+            PropertyHelpers::GetIndexedProperty(scriptsArray, i, &scriptValue);
 
             scripts.emplace_back(scriptValue);
         }
@@ -116,7 +116,7 @@ namespace JsDebug
         IfJsErrorThrow(JsDiagGetStackTrace(&stackTrace));
 
         int length = 0;
-        IfJsErrorThrow(PropertyHelpers::GetProperty(stackTrace, "length", &length));
+        PropertyHelpers::GetProperty(stackTrace, "length", &length);
 
         if (limit > 0 && limit < length) {
             length = limit;
@@ -126,7 +126,7 @@ namespace JsDebug
 
         for (int i = 0; i < length; ++i) {
             JsValueRef callFrameValue = JS_INVALID_REFERENCE;
-            IfJsErrorThrow(PropertyHelpers::GetIndexedProperty(stackTrace, i, &callFrameValue));
+            PropertyHelpers::GetIndexedProperty(stackTrace, i, &callFrameValue);
 
             callFrames.emplace_back(callFrameValue);
         }

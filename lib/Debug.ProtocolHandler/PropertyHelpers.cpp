@@ -32,25 +32,25 @@ namespace JsDebug
             // Resize the vector an initialize the elements to zero.
             buffer.resize(stringLength, 0);
 
-            IfJsErrorThrow(JsCopyStringUtf16(stringValue, 0, buffer.size(), buffer.data(), nullptr));
+            IfJsErrorThrow(JsCopyStringUtf16(stringValue, 0, static_cast<int>(buffer.size()), buffer.data(), nullptr));
 
             return String16(buffer.data(), buffer.size());
         }
 
-        JsErrorCode GetPropertyAsStringInternal(
+        void GetPropertyAsStringInternal(
             JsValueRef object,
             const char* name,
             bool convertToString,
             String16* value)
         {
             JsValueRef objValue = JS_INVALID_REFERENCE;
-            IfFailRet(PropertyHelpers::GetProperty(object, name, &objValue));
+            PropertyHelpers::GetProperty(object, name, &objValue);
 
             JsValueRef stringValue = JS_INVALID_REFERENCE;
 
             if (convertToString)
             {
-                IfFailRet(JsConvertValueToString(objValue, &stringValue));
+                IfJsErrorThrow(JsConvertValueToString(objValue, &stringValue));
             }
             else
             {
@@ -58,74 +58,66 @@ namespace JsDebug
             }
 
             int stringLength = 0;
-            IfFailRet(JsGetStringLength(stringValue, &stringLength));
+            IfJsErrorThrow(JsGetStringLength(stringValue, &stringLength));
 
             std::vector<uint16_t> buffer;
             buffer.reserve(stringLength);
-            IfFailRet(JsCopyStringUtf16(stringValue, 0, stringLength, buffer.data(), nullptr));
+            IfJsErrorThrow(JsCopyStringUtf16(stringValue, 0, stringLength, buffer.data(), nullptr));
 
             String16 str(buffer.data(), stringLength);
             std::swap(*value, str);
-
-            return JsNoError;
         }
     }
 
-    JsErrorCode PropertyHelpers::GetProperty(JsValueRef object, const char* name, JsValueRef* value)
+    void PropertyHelpers::GetProperty(JsValueRef object, const char* name, JsValueRef* value)
     {
         JsPropertyIdRef propertyId = JS_INVALID_REFERENCE;
-        IfFailRet(JsCreatePropertyId(name, std::strlen(name), &propertyId));
-        IfFailRet(JsGetProperty(object, propertyId, value));
-
-        return JsNoError;
+        IfJsErrorThrow(JsCreatePropertyId(name, std::strlen(name), &propertyId));
+        IfJsErrorThrow(JsGetProperty(object, propertyId, value));
     }
 
-    JsErrorCode PropertyHelpers::GetProperty(JsValueRef object, const char* name, bool* value)
+    void PropertyHelpers::GetProperty(JsValueRef object, const char* name, bool* value)
     {
         JsValueRef objValue = JS_INVALID_REFERENCE;
-        IfFailRet(GetProperty(object, name, &objValue));
-        IfFailRet(JsBooleanToBool(objValue, value));
-
-        return JsNoError;
+        GetProperty(object, name, &objValue);
+        IfJsErrorThrow(JsBooleanToBool(objValue, value));
     }
 
-    JsErrorCode PropertyHelpers::GetProperty(JsValueRef object, const char* name, int* value)
+    void PropertyHelpers::GetProperty(JsValueRef object, const char* name, int* value)
     {
         JsValueRef objValue = JS_INVALID_REFERENCE;
-        IfFailRet(GetProperty(object, name, &objValue));
-        IfFailRet(JsNumberToInt(objValue, value));
-
-        return JsNoError;
+        GetProperty(object, name, &objValue);
+        IfJsErrorThrow(JsNumberToInt(objValue, value));
     }
 
-    JsErrorCode PropertyHelpers::GetProperty(JsValueRef object, const char* name, String16* value)
+    void PropertyHelpers::GetProperty(JsValueRef object, const char* name, String16* value)
     {
         return GetPropertyAsStringInternal(object, name, false, value);
     }
 
-    JsErrorCode PropertyHelpers::GetPropertyAsString(JsValueRef object, const char* name, String16* value)
+    void PropertyHelpers::GetPropertyAsString(JsValueRef object, const char* name, String16* value)
     {
         return GetPropertyAsStringInternal(object, name, true, value);
     }
 
-    JsErrorCode PropertyHelpers::GetIndexedProperty(JsValueRef object, int index, JsValueRef* value)
+    void PropertyHelpers::GetIndexedProperty(JsValueRef object, int index, JsValueRef* value)
     {
         JsValueRef indexValue = JS_INVALID_REFERENCE;
-        IfFailRet(JsIntToNumber(index, &indexValue));
+        IfJsErrorThrow(JsIntToNumber(index, &indexValue));
 
         int stringLength = 0;
-        IfFailRet(JsGetIndexedProperty(object, indexValue, value));
-
-        return JsNoError;
+        IfJsErrorThrow(JsGetIndexedProperty(object, indexValue, value));
     }
 
-    JsErrorCode PropertyHelpers::HasProperty(JsValueRef object, const char* name, bool* hasProperty)
+    bool PropertyHelpers::HasProperty(JsValueRef object, const char* name)
     {
         JsPropertyIdRef propertyId = JS_INVALID_REFERENCE;
-        IfFailRet(JsCreatePropertyId(name, std::strlen(name), &propertyId));
-        IfFailRet(JsHasProperty(object, propertyId, hasProperty));
+        IfJsErrorThrow(JsCreatePropertyId(name, std::strlen(name), &propertyId));
 
-        return JsNoError;
+        bool hasProperty = false;
+        IfJsErrorThrow(JsHasProperty(object, propertyId, &hasProperty));
+
+        return hasProperty;
     }
 
     bool PropertyHelpers::TryGetProperty(JsValueRef object, const char* name, JsValueRef* value)

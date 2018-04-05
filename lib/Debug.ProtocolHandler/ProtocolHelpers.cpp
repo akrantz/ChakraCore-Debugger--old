@@ -10,6 +10,7 @@
 
 namespace JsDebug
 {
+    using protocol::Debugger::Location;
     using protocol::Runtime::RemoteObject;
     using protocol::String;
     using protocol::Value;
@@ -30,7 +31,7 @@ namespace JsDebug
         std::unique_ptr<RemoteObject> CreateObject(JsValueRef object)
         {
             protocol::String type;
-            IfJsErrorThrow(PropertyHelpers::GetProperty(object, "type", &type));
+            PropertyHelpers::GetProperty(object, "type", &type);
 
             return RemoteObject::create()
                 .setType(type)
@@ -61,7 +62,7 @@ namespace JsDebug
         // A description is required for values to be shown in the debugger.
         if (hasValue && !hasDisplay)
         {
-            IfJsErrorThrow(PropertyHelpers::GetPropertyAsString(object, "value", &display));
+            PropertyHelpers::GetPropertyAsString(object, "value", &display);
         }
 
         if (display.empty())
@@ -86,6 +87,24 @@ namespace JsDebug
         wrapped->setSubtype("error");
 
         return wrapped;
+    }
+
+    std::unique_ptr<Location> ProtocolHelpers::WrapLocation(JsValueRef location)
+    {
+        String scriptId;
+        PropertyHelpers::GetPropertyAsString(location, "scriptId", &scriptId);
+
+        int line = 0;
+        PropertyHelpers::GetProperty(location, "line", &line);
+
+        int column = 0;
+        PropertyHelpers::GetProperty(location, "column", &column);
+
+        return Location::create()
+            .setColumnNumber(column)
+            .setLineNumber(line)
+            .setScriptId(scriptId)
+            .build();
     }
 
     std::unique_ptr<protocol::Runtime::RemoteObject> ProtocolHelpers::GetUndefinedObject()
