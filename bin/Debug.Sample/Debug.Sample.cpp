@@ -15,30 +15,30 @@ public:
     bool breakOnNextLine;
     bool enableDebugging;
     int port;
-    std::wstring script;
     bool help;
 
-    CommandLineArguments() :
-        breakOnNextLine(false), enableDebugging(false), port(9229), help(false)
+	std::vector<std::wstring> args;
+
+    CommandLineArguments()
+		: breakOnNextLine(false)
+		, enableDebugging(false)
+		, port(9229)
+		, help(false)
     {
     }
 
     void ParseCommandLine(int argc, wchar_t* argv[])
-    {        
-        int paramIndex = 0;
+    {
+		bool foundScript = false;
 
         for (int index = 1; index < argc; ++index)
         {
             std::wstring arg(argv[index]);
 
-            // if starts with '-'
-            if ((arg.length() > 0) && (arg[0] == L'-'))
+            // Any flags before the script are considered host flags, anything else is passed to the script.
+            if (!foundScript && (arg.length() > 0) && (arg[0] == L'-'))
             {
-                if (!arg.compare(L"--help") || !arg.compare(L"-?"))
-                {
-                    this->help = true;
-                }
-                else if (!arg.compare(L"--inspect"))
+                if (!arg.compare(L"--inspect"))
                 {
                     this->enableDebugging = true;
                 }
@@ -51,32 +51,27 @@ public:
                 {
                     ++index;
                     if (argc > index)
-                    {                        
+                    {
+						// This will return zero if no number was found.
                         this->port = std::stoi(std::wstring(argv[index]));
                     }
                 }
+				else
+				{
+					// Handle everything else including `-?` and `--help`
+					this->help = true;
+				}
             }
             else
             {
-                switch (paramIndex)
-                {
-                    case 0:
-                    {
-                        this->script = arg;
-                        break;
-                    }
-                    default:
-                    {
-                        this->help = true;
-                        break;
-                    }
-                }
+				foundScript = true;
 
-                ++paramIndex;
+				// Collect any non-flag arguments
+				args.emplace_back(std::move(arg));
             }
         }
 
-        if (paramIndex == 0)
+        if (this->port < 0 || this->port > 65535 || args.empty())
         {
             this->help = true;
         }
@@ -86,12 +81,13 @@ public:
     {
         fwprintf(stderr,
             L"\n"
-            L"Usage: Debug.Sample.exe <script> [options]\n"
+            L"Usage: Debug.Sample.exe [host-options] <script> [script-arguments]\n"
             L"\n"
             L"Options: \n"
             L"      --inspect          Enable debugging\n"
             L"      --inspect-brk      Enable debugging and break\n"
             L"  -p, --port <number>    Specify the port number\n"
+			L"  -?  --help             Show this help info\n"
             L"\n");
     }
 };
@@ -121,7 +117,7 @@ void ThrowJsError(std::wstring errorString)
 // Helper to load a script from disk.
 //
 
-std::wstring LoadScript(std::wstring fileName)
+std::wstring LoadScript(const std::wstring& fileName)
 {
     FILE* file;
     if (_wfopen_s(&file, fileName.c_str(), L"rb"))
@@ -171,7 +167,12 @@ std::wstring LoadScript(std::wstring fileName)
 // Callback to echo something to the command-line.
 //
 
-JsValueRef CALLBACK Echo(JsValueRef callee, bool isConstructCall, JsValueRef* arguments, unsigned short argumentCount, void* callbackState)
+JsValueRef CALLBACK Echo(
+	JsValueRef callee, 
+	bool isConstructCall, 
+	JsValueRef* arguments, 
+	unsigned short argumentCount, 
+	void* callbackState)
 {
     for (unsigned int index = 1; index < argumentCount; index++)
     {
@@ -199,7 +200,12 @@ JsValueRef CALLBACK Echo(JsValueRef callee, bool isConstructCall, JsValueRef* ar
 // Callback to load a script and run it.
 //
 
-JsValueRef CALLBACK RunScript(JsValueRef callee, bool isConstructCall, JsValueRef* arguments, unsigned short argumentCount, void* callbackState)
+JsValueRef CALLBACK RunScript(
+	JsValueRef callee, 
+	bool isConstructCall, 
+	JsValueRef* arguments, 
+	unsigned short argumentCount, 
+	void* callbackState)
 {
     JsValueRef result = JS_INVALID_REFERENCE;
 
@@ -241,7 +247,11 @@ JsValueRef CALLBACK RunScript(JsValueRef callee, bool isConstructCall, JsValueRe
 // Helper to define a host callback method on the global host object.
 //
 
-JsErrorCode DefineHostCallback(JsValueRef globalObject, const wchar_t* callbackName, JsNativeFunction callback, void* callbackState)
+JsErrorCode DefineHostCallback(
+	JsValueRef globalObject, 
+	const wchar_t* callbackName, 
+	JsNativeFunction callback, 
+	void* callbackState)
 {
     //
     // Get property ID.
@@ -270,7 +280,7 @@ JsErrorCode DefineHostCallback(JsValueRef globalObject, const wchar_t* callbackN
 // Creates a host execution context and sets up the host object in it.
 //
 
-JsErrorCode CreateHostContext(JsRuntimeHandle runtime, int argc, wchar_t* argv[], int argumentsStart, JsContextRef* context)
+JsErrorCode CreateHostContext(JsRuntimeHandle runtime, std::vector<std::wstring>& args, JsContextRef* context)
 {
     //
     // Create the context.
@@ -322,24 +332,26 @@ JsErrorCode CreateHostContext(JsRuntimeHandle runtime, int argc, wchar_t* argv[]
     // Create an array for arguments.
     //
 
-    JsValueRef arguments;
-    IfFailRet(JsCreateArray(argc - argumentsStart, &arguments));
+    JsValueRef arguments = JS_INVALID_REFERENCE;
+    IfFailRet(JsCreateArray(static_cast<unsigned int>(args.size()), &arguments));
 
-    for (int index = argumentsStart; index < argc; index++)
+    for (int index = 0; index < args.size(); index++)
     {
         //
         // Create the argument value.
         //
 
+		std::wstring& str = args[index];
+
         JsValueRef argument;
-        IfFailRet(JsPointerToString(argv[index], wcslen(argv[index]), &argument));
+        IfFailRet(JsPointerToString(str.c_str(), str.length(), &argument));
 
         //
         // Create the index.
         //
 
         JsValueRef indexValue;
-        IfFailRet(JsIntToNumber(index - argumentsStart, &indexValue));
+        IfFailRet(JsIntToNumber(index, &indexValue));
 
         //
         // Set the value.
@@ -402,9 +414,14 @@ JsErrorCode PrintScriptException()
     return JsNoError;
 }
 
-JsErrorCode EnableDebugging(JsDebugProtocolHandler* pprotocolHandler, JsDebugService* pservice, 
-    JsRuntimeHandle runtime, std::string const& runtimeName, bool breakOnNextLine, int port)
-{    
+JsErrorCode EnableDebugging(
+    JsRuntimeHandle runtime,
+	std::string const& runtimeName,
+	bool breakOnNextLine, 
+	int port, 
+	JsDebugProtocolHandler* pProtocolHandler, 
+	JsDebugService* pService)
+{
     JsDebugProtocolHandler protocolHandler;
     JsDebugService service;
 
@@ -415,8 +432,8 @@ JsErrorCode EnableDebugging(JsDebugProtocolHandler* pprotocolHandler, JsDebugSer
 
     std::cout << "Listening on ws://127.0.0.1:" << port << "/" << runtimeName << std::endl;
 
-    *pprotocolHandler = protocolHandler;
-    *pservice = service;
+    *pProtocolHandler = protocolHandler;
+    *pService = service;
 
     return JsNoError;
 }
@@ -428,7 +445,7 @@ JsErrorCode EnableDebugging(JsDebugProtocolHandler* pprotocolHandler, JsDebugSer
 int _cdecl wmain(int argc, wchar_t* argv[])
 {
     int returnValue = EXIT_FAILURE;
-    CommandLineArguments arguments;    
+    CommandLineArguments arguments;
 
     arguments.ParseCommandLine(argc, argv);
 
@@ -445,7 +462,6 @@ int _cdecl wmain(int argc, wchar_t* argv[])
         JsDebugProtocolHandler protocolHandler = nullptr;
         JsDebugService service = nullptr;
 
-
         //
         // Create the runtime. We're only going to use one runtime for this host.
         //
@@ -454,7 +470,9 @@ int _cdecl wmain(int argc, wchar_t* argv[])
 
         if (arguments.enableDebugging)
         {
-            IfFailError(EnableDebugging(&protocolHandler, &service, runtime, "runtime1", arguments.breakOnNextLine, arguments.port), L"failed to enable debugging.");
+            IfFailError(
+				EnableDebugging(runtime, "runtime1", arguments.breakOnNextLine, arguments.port, &protocolHandler, &service),
+				L"failed to enable debugging.");
         }
 
         //
@@ -462,7 +480,7 @@ int _cdecl wmain(int argc, wchar_t* argv[])
         // so it will stay alive through the entire run.
         //
 
-        IfFailError(CreateHostContext(runtime, argc, argv, 1, &context), L"failed to create execution context.");
+        IfFailError(CreateHostContext(runtime, arguments.args, &context), L"failed to create execution context.");
 
         //
         // Now set the execution context as being the current one on this thread.
@@ -473,8 +491,8 @@ int _cdecl wmain(int argc, wchar_t* argv[])
         //
         // Load the script from the disk.
         //
-
-        std::wstring script = LoadScript(arguments.script);
+		const std::wstring& scriptName = arguments.args[0];
+        std::wstring script = LoadScript(scriptName);
         if (script.empty())
         {
             goto error;
@@ -491,8 +509,8 @@ int _cdecl wmain(int argc, wchar_t* argv[])
         // Run the script.
         //
 
-        JsValueRef result;
-        JsErrorCode errorCode = JsRunScript(script.c_str(), currentSourceContext++, arguments.script.c_str(), &result);
+        JsValueRef result = JS_INVALID_REFERENCE;
+        JsErrorCode errorCode = JsRunScript(script.c_str(), currentSourceContext++, scriptName.c_str(), &result);
 
         if (errorCode == JsErrorScriptException)
         {
