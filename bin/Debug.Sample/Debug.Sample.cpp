@@ -49,9 +49,10 @@ public:
                 }
                 else if (!arg.compare(L"--port") || !arg.compare(L"-p"))
                 {
-                    if (argc > index + 1)
+                    ++index;
+                    if (argc > index)
                     {                        
-                        this->port = std::stoi(std::wstring(argv[index + 1]));
+                        this->port = std::stoi(std::wstring(argv[index]));
                     }
                 }
             }
@@ -85,11 +86,12 @@ public:
     {
         fwprintf(stderr,
             L"\n"
-            L"Usage: chakrahost <script> [options]\n"
+            L"Usage: Debug.Sample.exe <script> [options]\n"
             L"\n"
             L"Options: \n"
-            L"  --inspect        enable debugging\n"
-            L"  --inspect-brk    enable debugging and break\n"
+            L"      --inspect          Enable debugging\n"
+            L"      --inspect-brk      Enable debugging and break\n"
+            L"  -p, --port <number>    Specify the port number\n"
             L"\n");
     }
 };
