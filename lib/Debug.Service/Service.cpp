@@ -63,7 +63,7 @@ namespace JsDebug
     {
         try
         {
-			// TODO: Bind to localhost only
+            // TODO: Bind to localhost only
             m_server.listen(port);
             m_server.start_accept();
         }

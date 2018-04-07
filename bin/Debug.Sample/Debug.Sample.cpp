@@ -17,19 +17,19 @@ public:
     int port;
     bool help;
 
-	std::vector<std::wstring> args;
+    std::vector<std::wstring> args;
 
     CommandLineArguments()
-		: breakOnNextLine(false)
-		, enableDebugging(false)
-		, port(9229)
-		, help(false)
+        : breakOnNextLine(false)
+        , enableDebugging(false)
+        , port(9229)
+        , help(false)
     {
     }
 
     void ParseCommandLine(int argc, wchar_t* argv[])
     {
-		bool foundScript = false;
+        bool foundScript = false;
 
         for (int index = 1; index < argc; ++index)
         {
@@ -52,22 +52,22 @@ public:
                     ++index;
                     if (argc > index)
                     {
-						// This will return zero if no number was found.
+                        // This will return zero if no number was found.
                         this->port = std::stoi(std::wstring(argv[index]));
                     }
                 }
-				else
-				{
-					// Handle everything else including `-?` and `--help`
-					this->help = true;
-				}
+                else
+                {
+                    // Handle everything else including `-?` and `--help`
+                    this->help = true;
+                }
             }
             else
             {
-				foundScript = true;
+                foundScript = true;
 
-				// Collect any non-flag arguments
-				args.emplace_back(std::move(arg));
+                // Collect any non-flag arguments
+                args.emplace_back(std::move(arg));
             }
         }
 
@@ -87,7 +87,7 @@ public:
             L"      --inspect          Enable debugging\n"
             L"      --inspect-brk      Enable debugging and break\n"
             L"  -p, --port <number>    Specify the port number\n"
-			L"  -?  --help             Show this help info\n"
+            L"  -?  --help             Show this help info\n"
             L"\n");
     }
 };
@@ -168,11 +168,11 @@ std::wstring LoadScript(const std::wstring& fileName)
 //
 
 JsValueRef CALLBACK Echo(
-	JsValueRef callee, 
-	bool isConstructCall, 
-	JsValueRef* arguments, 
-	unsigned short argumentCount, 
-	void* callbackState)
+    JsValueRef callee, 
+    bool isConstructCall, 
+    JsValueRef* arguments, 
+    unsigned short argumentCount, 
+    void* callbackState)
 {
     for (unsigned int index = 1; index < argumentCount; index++)
     {
@@ -201,11 +201,11 @@ JsValueRef CALLBACK Echo(
 //
 
 JsValueRef CALLBACK RunScript(
-	JsValueRef callee, 
-	bool isConstructCall, 
-	JsValueRef* arguments, 
-	unsigned short argumentCount, 
-	void* callbackState)
+    JsValueRef callee, 
+    bool isConstructCall, 
+    JsValueRef* arguments, 
+    unsigned short argumentCount, 
+    void* callbackState)
 {
     JsValueRef result = JS_INVALID_REFERENCE;
 
@@ -248,10 +248,10 @@ JsValueRef CALLBACK RunScript(
 //
 
 JsErrorCode DefineHostCallback(
-	JsValueRef globalObject, 
-	const wchar_t* callbackName, 
-	JsNativeFunction callback, 
-	void* callbackState)
+    JsValueRef globalObject, 
+    const wchar_t* callbackName, 
+    JsNativeFunction callback, 
+    void* callbackState)
 {
     //
     // Get property ID.
@@ -341,7 +341,7 @@ JsErrorCode CreateHostContext(JsRuntimeHandle runtime, std::vector<std::wstring>
         // Create the argument value.
         //
 
-		std::wstring& str = args[index];
+        std::wstring& str = args[index];
 
         JsValueRef argument;
         IfFailRet(JsPointerToString(str.c_str(), str.length(), &argument));
@@ -416,11 +416,11 @@ JsErrorCode PrintScriptException()
 
 JsErrorCode EnableDebugging(
     JsRuntimeHandle runtime,
-	std::string const& runtimeName,
-	bool breakOnNextLine, 
-	int port, 
-	JsDebugProtocolHandler* pProtocolHandler, 
-	JsDebugService* pService)
+    std::string const& runtimeName,
+    bool breakOnNextLine, 
+    int port, 
+    JsDebugProtocolHandler* pProtocolHandler, 
+    JsDebugService* pService)
 {
     JsDebugProtocolHandler protocolHandler;
     JsDebugService service;
@@ -471,8 +471,8 @@ int _cdecl wmain(int argc, wchar_t* argv[])
         if (arguments.enableDebugging)
         {
             IfFailError(
-				EnableDebugging(runtime, "runtime1", arguments.breakOnNextLine, arguments.port, &protocolHandler, &service),
-				L"failed to enable debugging.");
+                EnableDebugging(runtime, "runtime1", arguments.breakOnNextLine, arguments.port, &protocolHandler, &service),
+                L"failed to enable debugging.");
         }
 
         //
@@ -491,7 +491,7 @@ int _cdecl wmain(int argc, wchar_t* argv[])
         //
         // Load the script from the disk.
         //
-		const std::wstring& scriptName = arguments.args[0];
+        const std::wstring& scriptName = arguments.args[0];
         std::wstring script = LoadScript(scriptName);
         if (script.empty())
         {
