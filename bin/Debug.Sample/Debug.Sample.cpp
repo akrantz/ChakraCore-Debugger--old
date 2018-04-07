@@ -12,11 +12,85 @@
 class CommandLineArguments
 {
 public:
-    int argumentsStart;
+    bool breakOnNextLine;
+    bool enableDebugging;
+    int port;
+    std::wstring script;
+    bool help;
 
     CommandLineArguments() :
-        argumentsStart(1)
+        breakOnNextLine(false), enableDebugging(false), port(9229), help(false)
     {
+    }
+
+    void ParseCommandLine(int argc, wchar_t* argv[])
+    {        
+        int paramIndex = 0;
+
+        for (int index = 1; index < argc; ++index)
+        {
+            std::wstring arg(argv[index]);
+
+            // if starts with '-'
+            if ((arg.length() > 0) && (arg[0] == L'-'))
+            {
+                if (!arg.compare(L"--help") || !arg.compare(L"-?"))
+                {
+                    this->help = true;
+                }
+                else if (!arg.compare(L"--inspect"))
+                {
+                    this->enableDebugging = true;
+                }
+                else if (!arg.compare(L"--inspect-brk"))
+                {
+                    this->enableDebugging = true;
+                    this->breakOnNextLine = true;
+                }
+                else if (!arg.compare(L"--port") || !arg.compare(L"-p"))
+                {
+                    if (argc > index + 1)
+                    {                        
+                        this->port = std::stoi(std::wstring(argv[index + 1]));
+                    }
+                }
+            }
+            else
+            {
+                switch (paramIndex)
+                {
+                    case 0:
+                    {
+                        this->script = arg;
+                        break;
+                    }
+                    default:
+                    {
+                        this->help = true;
+                        break;
+                    }
+                }
+
+                ++paramIndex;
+            }
+        }
+
+        if (paramIndex == 0)
+        {
+            this->help = true;
+        }
+    }
+
+    void ShowHelp()
+    {
+        fwprintf(stderr,
+            L"\n"
+            L"Usage: chakrahost <script> [options]\n"
+            L"\n"
+            L"Options: \n"
+            L"  --inspect        enable debugging\n"
+            L"  --inspect-brk    enable debugging and break\n"
+            L"\n");
     }
 };
 
@@ -326,6 +400,25 @@ JsErrorCode PrintScriptException()
     return JsNoError;
 }
 
+JsErrorCode EnableDebugging(JsDebugProtocolHandler* pprotocolHandler, JsDebugService* pservice, 
+    JsRuntimeHandle runtime, std::string const& runtimeName, bool breakOnNextLine, int port)
+{    
+    JsDebugProtocolHandler protocolHandler;
+    JsDebugService service;
+
+    IfFailRet(JsDebugProtocolHandlerCreate(runtime, &protocolHandler));
+    IfFailRet(JsDebugServiceCreate(&service));
+    IfFailRet(JsDebugServiceRegisterHandler(service, runtimeName.c_str(), protocolHandler, breakOnNextLine));
+    IfFailRet(JsDebugServiceListen(service, port));
+
+    std::cout << "Listening on ws://127.0.0.1:" << port << "/" << runtimeName << std::endl;
+
+    *pprotocolHandler = protocolHandler;
+    *pservice = service;
+
+    return JsNoError;
+}
+
 //
 // The main entry point for the host.
 //
@@ -333,22 +426,23 @@ JsErrorCode PrintScriptException()
 int _cdecl wmain(int argc, wchar_t* argv[])
 {
     int returnValue = EXIT_FAILURE;
-    CommandLineArguments arguments;
+    CommandLineArguments arguments;    
 
-    arguments.argumentsStart = 1;
+    arguments.ParseCommandLine(argc, argv);
 
-    if (argc - arguments.argumentsStart < 1)
+    if (arguments.help)
     {
-        fwprintf(stderr, L"usage: chakrahost <script name> <arguments>\n");
+        arguments.ShowHelp();
         return returnValue;
     }
 
     try
     {
-        JsRuntimeHandle runtime;
-        JsDebugProtocolHandler protocolHandler;
-        JsDebugService service;
-        JsContextRef context;
+        JsRuntimeHandle runtime = JS_INVALID_RUNTIME_HANDLE;
+        JsContextRef context = JS_INVALID_REFERENCE;
+        JsDebugProtocolHandler protocolHandler = nullptr;
+        JsDebugService service = nullptr;
+
 
         //
         // Create the runtime. We're only going to use one runtime for this host.
@@ -356,19 +450,17 @@ int _cdecl wmain(int argc, wchar_t* argv[])
 
         IfFailError(JsCreateRuntime(JsRuntimeAttributeNone, nullptr, &runtime), L"failed to create runtime.");
 
-        IfFailError(JsDebugProtocolHandlerCreate(runtime, &protocolHandler), L"failed to create protocol handler.");
-        IfFailError(JsDebugServiceCreate(&service), L"failed to create service.");
-        IfFailError(JsDebugServiceRegisterHandler(service, "runtime1", protocolHandler, /*breakOnNextLine*/ true), L"failed to register handler.");
-        IfFailError(JsDebugServiceListen(service, 9229), L"failed to listen on port 9229.");
-
-        std::cout << "Listening on ws://127.0.0.1:9229/runtime1" << std::endl;
+        if (arguments.enableDebugging)
+        {
+            IfFailError(EnableDebugging(&protocolHandler, &service, runtime, "runtime1", arguments.breakOnNextLine, arguments.port), L"failed to enable debugging.");
+        }
 
         //
         // Similarly, create a single execution context. Note that we're putting it on the stack here,
         // so it will stay alive through the entire run.
         //
 
-        IfFailError(CreateHostContext(runtime, argc, argv, arguments.argumentsStart, &context), L"failed to create execution context.");
+        IfFailError(CreateHostContext(runtime, argc, argv, 1, &context), L"failed to create execution context.");
 
         //
         // Now set the execution context as being the current one on this thread.
@@ -380,22 +472,25 @@ int _cdecl wmain(int argc, wchar_t* argv[])
         // Load the script from the disk.
         //
 
-        std::wstring script = LoadScript(argv[arguments.argumentsStart]);
+        std::wstring script = LoadScript(arguments.script);
         if (script.empty())
         {
             goto error;
         }
 
-        std::cout << "Waiting for debugger to connect..." << std::endl;
-        IfFailError(JsDebugProtocolHandlerWaitForDebugger(protocolHandler), L"failed to wait for debugger");
-        std::cout << "Debugger connected" << std::endl;
+        if (protocolHandler)
+        {
+            std::cout << "Waiting for debugger to connect..." << std::endl;
+            IfFailError(JsDebugProtocolHandlerWaitForDebugger(protocolHandler), L"failed to wait for debugger");
+            std::cout << "Debugger connected" << std::endl;
+        }
 
         //
         // Run the script.
         //
 
         JsValueRef result;
-        JsErrorCode errorCode = JsRunScript(script.c_str(), currentSourceContext++, argv[arguments.argumentsStart], &result);
+        JsErrorCode errorCode = JsRunScript(script.c_str(), currentSourceContext++, arguments.script.c_str(), &result);
 
         if (errorCode == JsErrorScriptException)
         {
@@ -418,13 +513,19 @@ int _cdecl wmain(int argc, wchar_t* argv[])
         returnValue = (int)doubleResult;
         std::cout << returnValue << std::endl;
 
-        IfFailError(JsDebugServiceClose(service), L"failed to close service");
-        IfFailError(JsDebugServiceUnregisterHandler(service, "runtime1"), L"failed to unregister handler");
-        IfFailError(JsDebugServiceDestroy(service), L"failed to destroy service");
-        service = nullptr;
+        if (service)
+        {
+            IfFailError(JsDebugServiceClose(service), L"failed to close service");
+            IfFailError(JsDebugServiceUnregisterHandler(service, "runtime1"), L"failed to unregister handler");
+            IfFailError(JsDebugServiceDestroy(service), L"failed to destroy service");
+            service = nullptr;
+        }
 
-        IfFailError(JsDebugProtocolHandlerDestroy(protocolHandler), L"failed to destroy handler");
-        protocolHandler = nullptr;
+        if (protocolHandler)
+        {
+            IfFailError(JsDebugProtocolHandlerDestroy(protocolHandler), L"failed to destroy handler");
+            protocolHandler = nullptr;
+        }
 
         //
         // Clean up the current execution context.
