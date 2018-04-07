@@ -71,7 +71,7 @@ public:
             }
         }
 
-        if (this->port < 0 || this->port > 65535 || args.empty())
+        if (this->port <= 0 || this->port > 65535 || args.empty())
         {
             this->help = true;
         }
@@ -422,8 +422,8 @@ JsErrorCode EnableDebugging(
     JsDebugProtocolHandler* pProtocolHandler, 
     JsDebugService* pService)
 {
-    JsDebugProtocolHandler protocolHandler;
-    JsDebugService service;
+    JsDebugProtocolHandler protocolHandler = nullptr;
+    JsDebugService service = nullptr;
 
     IfFailRet(JsDebugProtocolHandlerCreate(runtime, &protocolHandler));
     IfFailRet(JsDebugServiceCreate(&service));
