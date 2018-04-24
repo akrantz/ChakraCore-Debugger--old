@@ -81,7 +81,7 @@ public:
 
         if (result != JsNoError)
         {
-            throw new std::exception("Unable to create debug protocol handler.");
+            throw std::exception("Unable to create debug protocol handler.");
         }
 
         m_protocolHandler = protocolHandler;
