@@ -8,64 +8,30 @@
     <Filter Include="Generated Files">
       <UniqueIdentifier>{62cca143-3a04-4e0e-91cc-c1244303556c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Generated Files\include">
-      <UniqueIdentifier>{8db701b8-81ee-4206-a006-39950e7dc46c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Generated Files\protocol">
-      <UniqueIdentifier>{892e669a-43cb-4e38-8821-4aecdbfaa7e9}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(IntermediateOutputPath)include\Debugger.h">
-      <Filter>Generated Files\include</Filter>
-    </ClInclude>
-    <ClInclude Include="$(IntermediateOutputPath)include\Runtime.h">
-      <Filter>Generated Files\include</Filter>
-    </ClInclude>
-    <ClInclude Include="$(IntermediateOutputPath)include\Schema.h">
-      <Filter>Generated Files\include</Filter>
-    </ClInclude>
-    <ClInclude Include="$(IntermediateOutputPath)protocol\Console.h">
-      <Filter>Generated Files\protocol</Filter>
-    </ClInclude>
-    <ClInclude Include="$(IntermediateOutputPath)protocol\Debugger.h">
-      <Filter>Generated Files\protocol</Filter>
-    </ClInclude>
-    <ClInclude Include="$(IntermediateOutputPath)protocol\Forward.h">
-      <Filter>Generated Files\protocol</Filter>
-    </ClInclude>
-    <ClInclude Include="$(IntermediateOutputPath)protocol\Protocol.h">
-      <Filter>Generated Files\protocol</Filter>
-    </ClInclude>
-    <ClInclude Include="$(IntermediateOutputPath)protocol\Runtime.h">
-      <Filter>Generated Files\protocol</Filter>
-    </ClInclude>
-    <ClInclude Include="$(IntermediateOutputPath)protocol\Schema.h">
-      <Filter>Generated Files\protocol</Filter>
-    </ClInclude>
     <ClInclude Include="Common.h" />
     <ClInclude Include="String16.h" />
     <ClInclude Include="StringUtil.h" />
+    <ClInclude Include="generated\include\Debugger.h" />
+    <ClInclude Include="generated\include\Runtime.h" />
+    <ClInclude Include="generated\include\Schema.h" />
+    <ClInclude Include="generated\protocol\Console.h" />
+    <ClInclude Include="generated\protocol\Debugger.h" />
+    <ClInclude Include="generated\protocol\Forward.h" />
+    <ClInclude Include="generated\protocol\Protocol.h" />
+    <ClInclude Include="generated\protocol\Runtime.h" />
+    <ClInclude Include="generated\protocol\Schema.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(IntermediateOutputPath)protocol\Console.cpp">
-      <Filter>Generated Files\protocol</Filter>
-    </ClCompile>
-    <ClCompile Include="$(IntermediateOutputPath)protocol\Debugger.cpp">
-      <Filter>Generated Files\protocol</Filter>
-    </ClCompile>
-    <ClCompile Include="$(IntermediateOutputPath)protocol\Protocol.cpp">
-      <Filter>Generated Files\protocol</Filter>
-    </ClCompile>
-    <ClCompile Include="$(IntermediateOutputPath)protocol\Runtime.cpp">
-      <Filter>Generated Files\protocol</Filter>
-    </ClCompile>
-    <ClCompile Include="$(IntermediateOutputPath)protocol\Schema.cpp">
-      <Filter>Generated Files\protocol</Filter>
-    </ClCompile>
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="String16.cpp" />
     <ClCompile Include="StringUtil.cpp" />
+    <ClCompile Include="generated\protocol\Console.cpp" />
+    <ClCompile Include="generated\protocol\Debugger.cpp" />
+    <ClCompile Include="generated\protocol\Protocol.cpp" />
+    <ClCompile Include="generated\protocol\Runtime.cpp" />
+    <ClCompile Include="generated\protocol\Schema.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="inspector_protocol_config.json" />
