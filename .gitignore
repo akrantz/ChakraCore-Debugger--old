@@ -292,3 +292,6 @@ __pycache__/
 
 # Jinja cache files
 __jinja*.cache
+
+# Ignore the build output folder
+/build/
